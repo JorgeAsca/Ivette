@@ -1,5 +1,7 @@
+// src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth"; // <-- Añade esta línea
 
 // Tu configuración de Firebase que copiaste antes
 const firebaseConfig = {
@@ -16,3 +18,5 @@ const app = initializeApp(firebaseConfig);
 
 
 export const db = getFirestore(app);
+// src/firebase.ts
+export const auth = getAuth(app); // <-- Añade esta línea
