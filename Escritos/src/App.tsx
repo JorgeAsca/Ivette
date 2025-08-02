@@ -38,13 +38,65 @@ function App() {
       setTextos(textosData);
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
-  // El resto de tu código de funciones (handleEnviarTexto, handleVotar)
-  // y el JSX de 'return' pueden permanecer igual.
-  
-  // ... (resto de tu código)
+  // You need to define handleEnviarTexto and handleVotar functions here
+  const handleEnviarTexto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nuevoTexto.trim() === "") return;
+    await addDoc(collection(db, "textos"), {
+      contenido: nuevoTexto,
+      likes: 0,
+      dislikes: 0,
+      creadoEn: new Date()
+    });
+    setNuevoTexto("");
+  };
+
+  const handleVotar = async (id: string, tipo: 'like' | 'dislike') => {
+    const textoRef = doc(db, "textos", id);
+    await updateDoc(textoRef, {
+      [tipo === 'like' ? 'likes' : 'dislikes']: increment(1)
+    });
+  };
+
+  return (
+    <div className="app-container">
+      <header>
+        <h1>Plataforma de Textos Anónimos</h1>
+        <p>Escribe un poema, un pensamiento o una historia corta.</p>
+      </header>
+
+      <form onSubmit={handleEnviarTexto} className="form-container">
+        <textarea
+          value={nuevoTexto}
+          onChange={(e) => setNuevoTexto(e.target.value)}
+          placeholder="Escribe algo aquí..."
+          rows={4}
+        />
+        <button type="submit">Enviar</button>
+      </form>
+
+      <div className="textos-lista">
+        {textos.map(texto => (
+          <div key={texto.id} className="texto-item">
+            <p className="texto-contenido">{texto.contenido}</p>
+            <div className="acciones">
+              <button onClick={() => handleVotar(texto.id, 'like')}>
+                👍 Me gusta ({texto.likes})
+              </button>
+              <button onClick={() => handleVotar(texto.id, 'dislike')}>
+                👎 No me gusta ({texto.dislikes})
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
 
 export default App;
