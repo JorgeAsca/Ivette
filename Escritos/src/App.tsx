@@ -1,14 +1,14 @@
-// src/App.jsx
+
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, doc, updateDoc, increment, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from './firebase'; 
-import './App.css'; 
+import { db } from './firebase';
+import './App.css';
 
 function App() {
   const [textos, setTextos] = useState([]);
   const [nuevoTexto, setNuevoTexto] = useState("");
 
-  // useEffect para cargar los textos al iniciar y escuchar cambios
+  
   useEffect(() => {
     const q = query(collection(db, "textos"), orderBy("creadoEn", "desc"));
 
@@ -20,10 +20,8 @@ function App() {
       setTextos(textosData);
     });
 
-    return () => unsubscribe(); // Limpiar la suscripción al desmontar
+    return () => unsubscribe(); 
   }, []);
-
-  // Función para añadir un nuevo texto
   const handleEnviarTexto = async (e) => {
     e.preventDefault();
     if (nuevoTexto.trim() === "") return;
@@ -38,7 +36,6 @@ function App() {
     setNuevoTexto("");
   };
 
-  // Función para votar
   const handleVotar = async (id, tipo) => {
     const textoRef = doc(db, "textos", id);
     if (tipo === 'like') {
