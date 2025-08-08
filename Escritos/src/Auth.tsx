@@ -1,6 +1,6 @@
-// src/Auth.tsx
+
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-// Use a type-only import for 'User'
+
 import type { User } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -10,7 +10,7 @@ interface AuthProps {
 
 const provider = new GoogleAuthProvider();
 
-// Add the 'export' keyword here
+
 export function Auth({ user }: AuthProps) {
   const handleSignIn = () => {
     signInWithPopup(auth, provider).catch((error) => console.error(error));

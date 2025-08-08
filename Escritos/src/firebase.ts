@@ -1,9 +1,9 @@
-// src/firebase.ts
+
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth"; // <-- Añade esta línea
+import { getAuth } from "firebase/auth"; 
 
-// Tu configuración de Firebase que copiaste antes
+
 const firebaseConfig = {
   apiKey: "AIzaSyCMi_n0xpPEFB58yMInw_lAU-m_fkIe30k",
   authDomain: "escritos-80cf7.firebaseapp.com",
@@ -18,5 +18,5 @@ const app = initializeApp(firebaseConfig);
 
 
 export const db = getFirestore(app);
-// src/firebase.ts
-export const auth = getAuth(app); // <-- Añade esta línea
+
+export const auth = getAuth(app); 
