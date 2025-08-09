@@ -41,17 +41,17 @@ const SignUpModal = ({ onClose }: { onClose: () => void }) => {
     }
 
     try {
-      // --- PASO 2: Crear el usuario en Firebase Authentication ---
+      // Crear el usuario en Firebase Authentication ---
       const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
       const user = userCredential.user;
       console.log('Usuario creado en Auth:', user.uid);
 
-      // --- PASO 3: Actualizar el perfil de Auth con el nombre completo ---
+      // Actualizar el perfil de Auth con el nombre completo ---
       await updateProfile(user, {
         displayName: `${nombre} ${apellido}`
       });
 
-      // --- PASO 4: Guardar la información extra en Firestore ---
+      // guardando la información extra en FIREBASE
       // Usamos el UID del usuario como ID del documento en la colección 'users'
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
@@ -59,7 +59,8 @@ const SignUpModal = ({ onClose }: { onClose: () => void }) => {
         nombre,
         apellido,
         username,
-        email: newEmail.toLowerCase(), // Guardamos el email en minúsculas para facilitar búsquedas
+        email: newEmail.toLowerCase(),
+        autorFoto: user.photoURL || null, // Se guarda el email en minúsculas para facilitar búsquedas
         creadoEn: serverTimestamp()
       });
 
