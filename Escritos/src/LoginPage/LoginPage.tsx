@@ -11,7 +11,7 @@ import { auth, db } from '../firebase';
 import './LoginPage.css';
 
 const SignUpModal = ({ onClose }: { onClose: () => void }) => {
-  // Nuevos estados para todos los campos del formulario
+  
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [username, setUsername] = useState('');
