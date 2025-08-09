@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
+import { LoginPage } from './LoginPage/LoginPage';
 import { auth, db } from './firebase';
 import { Auth } from './Auth';
 import {
@@ -15,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import './App.css';
 
-// Define la estructura de un texto
+
 interface Texto {
   id: string;
   contenido: string;
@@ -26,42 +27,54 @@ interface Texto {
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [textos, setTextos] = useState<Texto[]>([]);
-  const [nuevoTexto, setNuevoTexto] = useState(""); // Estado para el formulario
+  const [nuevoTexto, setNuevoTexto] = useState("");
+  const [cargando, setCargando] = useState(true);
 
-  // Efecto para cargar datos y manejar autenticación
+
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setCargando(false);
     });
 
-    const q = query(collection(db, "textos"), orderBy("creadoEn", "desc"));
-    const unsubscribeTextos = onSnapshot(q, (snapshot) => {
-      const textosData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Texto[];
-      setTextos(textosData);
-    });
+    let unsubscribeTextos = () => {};
+    // Si hay un usuario, nos conectamos a firestore para leer los textos.
+    if (user) {
+      const q = query(collection(db, "textos"), orderBy("creadoEn", "desc"));
+      unsubscribeTextos = onSnapshot(q, (snapshot) => {
+        const textosData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Texto[];
+        setTextos(textosData);
+      });
+    } else {
+      // Si el usuario cierra sesión, limpiamos la lista de textos.
+      setTextos([]);
+    }
 
+    // La función de limpieza que se ejecuta al final.
     return () => {
       unsubscribeAuth();
       unsubscribeTextos();
     };
-  }, []);
+  }, [user]); // Se ejecuta cada vez que el estado 'user' cambia.
 
   // Función para enviar un nuevo texto a Firestore
   const handleEnviarTexto = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (nuevoTexto.trim() === "") return;
+    if (nuevoTexto.trim() === "" || !user) return;
 
     await addDoc(collection(db, "textos"), {
       contenido: nuevoTexto,
+      autor: user.displayName || 'Anónimo',
+      autorId: user.uid,
       likes: 0,
       dislikes: 0,
-      creadoEn: serverTimestamp(), // Usa la hora del servidor
+      creadoEn: serverTimestamp(),
     });
 
-    setNuevoTexto(""); // Limpia el campo de texto
+    setNuevoTexto("");
   };
 
   // Función para votar (like o dislike)
@@ -73,24 +86,26 @@ function App() {
     });
   };
 
-  // Función para enviar un comentario
-  const handleEnviarComentario = async (textoId: string, contenidoComentario: string) => {
-    if (!user) {
-      alert("Debes iniciar sesión para comentar.");
-      return;
-    }
-    // Aquí iría la lógica para guardar el comentario en Firestore
-    console.log(`Comentario en ${textoId}: ${contenidoComentario} por ${user.displayName}`);
-  };
+  // Condición de carga inicial
+  if (cargando) {
+      return <div className="app-container"><h1>Cargando...</h1></div>
+  }
 
+  // --- LÓGICA DE RENDERIZADO CORREGIDA ---
+  // Si NO hay usuario, muestra la pantalla de Login.
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  // Si SÍ hay un usuario, muestra la aplicación principal.
   return (
     <div className="app-container">
       <header>
         <h1>Plataforma de Textos</h1>
+        {/* Usamos el componente Auth para mostrar el nombre y el botón de salir */}
         <Auth user={user} />
       </header>
 
-      {/* Formulario para enviar nuevos textos */}
       <form onSubmit={handleEnviarTexto} className="form-container">
         <textarea
           value={nuevoTexto}
@@ -102,12 +117,10 @@ function App() {
         <button type="submit">Enviar</button>
       </form>
 
-      {/* Lista de textos publicados */}
       <div className="textos-lista">
         {textos.map((texto) => (
           <div key={texto.id} className="texto-item">
             <p className="texto-contenido">{texto.contenido}</p>
-            
             <div className="acciones">
               <button onClick={() => handleVotar(texto.id, 'like')}>
                 👍 ({texto.likes})
@@ -115,24 +128,6 @@ function App() {
               <button onClick={() => handleVotar(texto.id, 'dislike')}>
                 👎 ({texto.dislikes})
               </button>
-            </div>
-
-            <div className="comentarios-seccion">
-              <h4>Comentarios</h4>
-              {user ? (
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.target as HTMLFormElement;
-                  const input = form.elements.namedItem('comentario') as HTMLInputElement;
-                  handleEnviarComentario(texto.id, input.value);
-                  form.reset();
-                }}>
-                  <input name="comentario" type="text" placeholder="Añade un comentario..." required />
-                  <button type="submit">Enviar</button>
-                </form>
-              ) : (
-                <p>Inicia sesión para poder comentar.</p>
-              )}
             </div>
           </div>
         ))}
